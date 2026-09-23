@@ -1,0 +1,17 @@
+[
+  {
+    "image": "images/photo_01.jpg",
+    "expected_objects": [
+      { "class": "person", "count": 1 },
+      { "class": "dog", "count": 1 }
+    ],
+    "notes": "Приклад: людина вигулює собаку у парку, вдень, добре освітлення"
+  },
+  {
+    "image": "images/photo_02.jpg",
+    "expected_objects": [
+      { "class": "car", "count": 3 }
+    ],
+    "notes": "Приклад: паркування, три автомобілі частково перекривають один одного"
+  }
+]

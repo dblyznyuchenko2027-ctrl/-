@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<title>Object Detection — локальний inference</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+  h1 { font-size: 1.4rem; }
+  .controls { display: flex; gap: 1rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
+  .controls label { font-size: 0.9rem; }
+  button { padding: 0.5rem 1rem; border: none; border-radius: 6px; background: #2b6cb0; color: white; cursor: pointer; }
+  button:disabled { background: #a0aec0; cursor: not-allowed; }
+  #canvasWrap { position: relative; display: inline-block; margin-top: 1rem; max-width: 100%; }
+  canvas { max-width: 100%; border: 1px solid #ddd; border-radius: 6px; }
+  table { border-collapse: collapse; margin-top: 1rem; width: 100%; font-size: 0.9rem; }
+  th, td { border: 1px solid #e2e8f0; padding: 0.4rem 0.6rem; text-align: left; }
+  th { background: #f7fafc; }
+  .meta { margin-top: 0.75rem; font-size: 0.9rem; color: #444; }
+  .error { color: #c53030; margin-top: 1rem; }
+</style>
+</head>
+<body>
+  <h1>Object Detection — локальний inference (YOLO)</h1>
+
+  <div class="controls">
+    <input type="file" id="fileInput" accept="image/*" />
+    <label>
+      Поріг confidence: <span id="thresholdValue">0.25</span>
+      <input type="range" id="thresholdInput" min="0" max="1" step="0.01" value="0.25" />
+    </label>
+    <button id="runBtn">Розпізнати</button>
+  </div>
+
+  <div id="canvasWrap"></div>
+  <div class="meta" id="meta"></div>
+  <div class="error" id="error"></div>
+  <table id="resultsTable" style="display:none">
+    <thead><tr><th>#</th><th>Клас</th><th>Confidence</th><th>Рамка (x1,y1,x2,y2)</th></tr></thead>
+    <tbody id="resultsBody"></tbody>
+  </table>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const thresholdInput = document.getElementById('thresholdInput');
+const thresholdValue = document.getElementById('thresholdValue');
+const runBtn = document.getElementById('runBtn');
+const canvasWrap = document.getElementById('canvasWrap');
+const metaEl = document.getElementById('meta');
+const errorEl = document.getElementById('error');
+const table = document.getElementById('resultsTable');
+const tbody = document.getElementById('resultsBody');
+
+let currentImage = null;
+
+thresholdInput.addEventListener('input', () => {
+  thresholdValue.textContent = thresholdInput.value;
+});
+
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files[0];
+  errorEl.textContent = '';
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    currentImage = img;
+    drawImage(img, []);
+  };
+  img.src = URL.createObjectURL(file);
+});
+
+function drawImage(img, detections) {
+  canvasWrap.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  canvasWrap.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  ctx.lineWidth = Math.max(2, img.naturalWidth / 400);
+  ctx.font = `${Math.max(14, img.naturalWidth / 60)}px sans-serif`;
+  ctx.textBaseline = 'top';
+
+  detections.forEach((d) => {
+    const { x1, y1, x2, y2 } = d.box;
+    ctx.strokeStyle = '#22c55e';
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+    const label = `${d.class} ${(d.confidence * 100).toFixed(0)}%`;
+    const textWidth = ctx.measureText(label).width + 8;
+    ctx.fillStyle = '#22c55e';
+    ctx.fillRect(x1, Math.max(0, y1 - 20), textWidth, 20);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(label, x1 + 4, Math.max(0, y1 - 18));
+  });
+}
+
+runBtn.addEventListener('click', async () => {
+  const file = fileInput.files[0];
+  errorEl.textContent = '';
+  table.style.display = 'none';
+  metaEl.textContent = '';
+
+  if (!file) {
+    errorEl.textContent = 'Спочатку виберіть файл зображення.';
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  const threshold = thresholdInput.value;
+
+  runBtn.disabled = true;
+  runBtn.textContent = 'Обробка...';
+
+  try {
+    const response = await fetch(`/detect?threshold=${threshold}`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errBody = await response.json().catch(() => ({ detail: response.statusText }));
+      throw new Error(errBody.detail || `Помилка HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (currentImage) {
+      drawImage(currentImage, data.objects.map(o => ({
+        class: o.class,
+        confidence: o.confidence,
+        box: o.box,
+      })));
+    }
+
+    metaEl.textContent =
+      `Знайдено об'єктів: ${data.count} · ` +
+      `час inference: ${data.inference_time_ms} мс · ` +
+      `розмір зображення: ${data.image_width}×${data.image_height} · ` +
+      `поріг: ${data.threshold_used}`;
+
+    tbody.innerHTML = '';
+    data.objects.forEach((o, i) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${o.class}</td>
+        <td>${(o.confidence * 100).toFixed(1)}%</td>
+        <td>${o.box.x1}, ${o.box.y1}, ${o.box.x2}, ${o.box.y2}</td>
+      `;
+      tbody.appendChild(row);
+    });
+    table.style.display = data.objects.length ? 'table' : 'none';
+  } catch (err) {
+    errorEl.textContent = err.message;
+  } finally {
+    runBtn.disabled = false;
+    runBtn.textContent = 'Розпізнати';
+  }
+});
+</script>
+</body>
+</html>
