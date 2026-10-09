@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Погода за назвою міста</title>
+    <style>
+        body { font-family: sans-serif; max-width: 480px; margin: 60px auto; }
+        form { display: flex; gap: 8px; margin-bottom: 24px; }
+        input[type=text] { flex: 1; padding: 8px; font-size: 16px; }
+        button { padding: 8px 16px; font-size: 16px; cursor: pointer; }
+        .result { padding: 16px; border: 1px solid #ccc; border-radius: 8px; }
+        .error { padding: 16px; border: 1px solid #e33; border-radius: 8px; color: #a00; background: #fee; }
+        .temp { font-size: 32px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Погода за назвою міста</h1>
+    <form action="/weather-page" method="get">
+        <input type="text" name="city" placeholder="Наприклад: Kyiv" required>
+        <button type="submit">Дізнатись погоду</button>
+    </form>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if result %}
+    <div class="result">
+        <div>{{ result.city }}{% if result.country %}, {{ result.country }}{% endif %}</div>
+        <div class="temp">{{ result.temperature_c }} °C</div>
+        <div>Швидкість вітру: {{ result.wind_speed_kmh }} км/год</div>
+    </div>
+    {% endif %}
+</body>
+</html>
