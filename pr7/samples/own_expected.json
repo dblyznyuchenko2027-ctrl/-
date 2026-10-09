@@ -1,0 +1,114 @@
+{
+  "samples/own/own-01-degraded.png": {
+    "source": "rahunok-02",
+    "variant": "own_degraded",
+    "note": "Власний варіант: обрізання знизу + розмиття; змодельований degrade.py.",
+    "fields": {
+      "document_type": "рахунок",
+      "number": "58",
+      "date": "2026-09-05",
+      "valid_until": null,
+      "supplier": {
+        "name": "ФОП Коваленко Ірина Петрівна",
+        "code": "3128704592",
+        "iban": "UA133220010000026007315204418"
+      },
+      "buyer": {
+        "name": "ТОВ «Сузірʼя Рітейл»",
+        "code": "44172914"
+      },
+      "items": [
+        {
+          "name": "Кабель USB-C — USB-C, 1 м",
+          "unit": "шт",
+          "quantity": 50,
+          "price": "89.00",
+          "amount": "4450.00"
+        },
+        {
+          "name": "Кабель USB-C — USB-C, 2 м",
+          "unit": "шт",
+          "quantity": 30,
+          "price": "118.00",
+          "amount": "3540.00"
+        },
+        {
+          "name": "Коробка картонна 30×20×10 см",
+          "unit": "шт",
+          "quantity": 200,
+          "price": "14.60",
+          "amount": "2920.00"
+        },
+        {
+          "name": "Пакет паперовий з логотипом",
+          "unit": "шт",
+          "quantity": 300,
+          "price": "3.95",
+          "amount": "1185.00"
+        }
+      ],
+      "total_without_vat": null,
+      "vat": null,
+      "total": null
+    },
+    "expected_checks": [
+      "missing_required"
+    ],
+    "expected_decision": "review"
+  },
+  "samples/own/own-02-phone-simulated.jpg": {
+    "source": "rahunok-02",
+    "variant": "own_phone_simulated",
+    "note": "Власний тестовий варіант із поворотом, низьким контрастом, шумом і JPEG; це симуляція фото телефоном, а не реальне фото.",
+    "fields": {
+      "document_type": "рахунок",
+      "number": "58",
+      "date": "2026-09-05",
+      "valid_until": "2026-09-12",
+      "supplier": {
+        "name": "ФОП Коваленко Ірина Петрівна",
+        "code": "3128704592",
+        "iban": "UA133220010000026007315204418"
+      },
+      "buyer": {
+        "name": "ТОВ «Сузірʼя Рітейл»",
+        "code": "44172914"
+      },
+      "items": [
+        {
+          "name": "Кабель USB-C — USB-C, 1 м",
+          "unit": "шт",
+          "quantity": 50,
+          "price": "89.00",
+          "amount": "4450.00"
+        },
+        {
+          "name": "Кабель USB-C — USB-C, 2 м",
+          "unit": "шт",
+          "quantity": 30,
+          "price": "118.00",
+          "amount": "3540.00"
+        },
+        {
+          "name": "Коробка картонна 30×20×10 см",
+          "unit": "шт",
+          "quantity": 200,
+          "price": "14.60",
+          "amount": "2920.00"
+        },
+        {
+          "name": "Пакет паперовий з логотипом",
+          "unit": "шт",
+          "quantity": 300,
+          "price": "3.95",
+          "amount": "1185.00"
+        }
+      ],
+      "total_without_vat": "12095.00",
+      "vat": "0.00",
+      "total": "12095.00"
+    },
+    "expected_checks": [],
+    "expected_decision": "auto"
+  }
+}
